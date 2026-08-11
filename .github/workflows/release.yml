@@ -1,0 +1,55 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    env:
+      APPALIAS_VERSION: ${{ github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23.x'
+      - uses: egor-tensin/setup-mingw@v2
+        with:
+          platform: x64
+      - name: Test
+        run: go test ./...
+      - name: Vet
+        run: go vet ./...
+      - name: Build Windows binaries
+        shell: powershell
+        run: |
+          New-Item -ItemType Directory -Force dist/bin | Out-Null
+          go build -trimpath -ldflags "-s -w" -o dist/bin/appalias.exe ./cmd/appalias
+          go build -trimpath -ldflags "-s -w" -o dist/bin/launcher.exe ./cmd/appalias-launcher
+          go build -trimpath -ldflags "-s -w" -o dist/bin/appalias-gui.exe ./cmd/appalias-gui
+      - name: Create portable archive
+        shell: powershell
+        run: Compress-Archive -Path dist/bin/* -DestinationPath dist/AppAlias-portable-x64.zip -Force
+      - uses: Minionguyjpro/Inno-Setup-Action@v1.2.5
+        with:
+          path: installer/appalias.iss
+          options: /DMyAppVersion=${{ github.ref_name }}
+      - name: Generate checksums
+        shell: powershell
+        run: |
+          Get-ChildItem dist -File | Where-Object { $_.Name -ne 'SHA256SUMS.txt' } | ForEach-Object {
+            $hash = (Get-FileHash -Algorithm SHA256 $_.FullName).Hash.ToLower()
+            "$hash  $($_.Name)"
+          } | Set-Content -NoNewline dist/SHA256SUMS.txt
+      - uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: |
+            dist/AppAlias-Setup-x64.exe
+            dist/AppAlias-portable-x64.zip
+            dist/SHA256SUMS.txt

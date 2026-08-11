@@ -1,0 +1,8 @@
+/dist/
+/.cache/
+/AppAlias-Setup-*.exe
+*.exe
+*.test
+coverage.out
+.idea/
+.vscode/

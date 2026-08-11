@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test-and-build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23.x'
+      - uses: egor-tensin/setup-mingw@v2
+        with:
+          platform: x64
+      - name: Resolve dependencies
+        run: go mod tidy
+      - name: Test
+        run: go test ./...
+      - name: Vet
+        run: go vet ./...
+      - name: Build binaries
+        shell: powershell
+        run: |
+          go build -trimpath -o dist/appalias.exe ./cmd/appalias
+          go build -trimpath -o dist/launcher.exe ./cmd/appalias-launcher
+          go build -trimpath -o dist/appalias-gui.exe ./cmd/appalias-gui
