@@ -43,14 +43,14 @@ type Config struct {
 }
 
 type Candidate struct {
-	ID                    string     `json:"id"`
-	DisplayName           string     `json:"displayName"`
-	Source                Source     `json:"source"`
-	Launch                LaunchSpec `json:"launch"`
-	Suggestions           []string   `json:"suggestions"`
-	Recommended           string     `json:"recommended,omitempty"`
-	RequiresConfirmation  bool       `json:"requiresConfirmation"`
-	ConfirmationReason    string     `json:"confirmationReason,omitempty"`
+	ID                   string     `json:"id"`
+	DisplayName          string     `json:"displayName"`
+	Source               Source     `json:"source"`
+	Launch               LaunchSpec `json:"launch"`
+	Suggestions          []string   `json:"suggestions"`
+	Recommended          string     `json:"recommended,omitempty"`
+	RequiresConfirmation bool       `json:"requiresConfirmation"`
+	ConfirmationReason   string     `json:"confirmationReason,omitempty"`
 }
 
 type ScanResult struct {

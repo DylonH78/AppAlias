@@ -14,6 +14,7 @@ import (
 	"sort"
 	"strings"
 	"time"
+	"unsafe"
 
 	"github.com/DylonH78/AppAlias/internal/alias"
 	"github.com/DylonH78/AppAlias/internal/model"
@@ -112,7 +113,7 @@ func scanStartMenu(ctx context.Context, root string) ([]discovered, []string) {
 		if !safeExecutable(info.TargetPath) {
 			continue
 		}
-		args, err := windows.CommandLineToArgv(info.Arguments)
+		args, err := splitCommandLine(info.Arguments)
 		if err != nil {
 			diagnostics = append(diagnostics, fmt.Sprintf("parse shortcut arguments for %s: %v", info.Name, err))
 			continue
@@ -123,6 +124,27 @@ func scanStartMenu(ctx context.Context, root string) ([]discovered, []string) {
 		})
 	}
 	return found, diagnostics
+}
+
+func splitCommandLine(commandLine string) ([]string, error) {
+	if strings.TrimSpace(commandLine) == "" {
+		return nil, nil
+	}
+	commandLinePtr, err := windows.UTF16PtrFromString(commandLine)
+	if err != nil {
+		return nil, err
+	}
+	var argumentCount int32
+	argv, err := windows.CommandLineToArgv(commandLinePtr, &argumentCount)
+	if err != nil {
+		return nil, err
+	}
+	defer windows.LocalFree(windows.Handle(uintptr(unsafe.Pointer(argv))))
+	arguments := make([]string, 0, argumentCount)
+	for index := 0; index < int(argumentCount); index++ {
+		arguments = append(arguments, windows.UTF16PtrToString((*uint16)(unsafe.Pointer(argv[index]))))
+	}
+	return arguments, nil
 }
 
 func decodeLinks(data []byte) ([]linkInfo, error) {
@@ -243,11 +265,11 @@ func newCandidate(displayName string, source model.Source, spec model.LaunchSpec
 	}
 	suggestions := alias.Suggestions(displayName, executable)
 	candidate := model.Candidate{
-		ID:           stableID(source, spec),
-		DisplayName:  displayName,
-		Source:       source,
-		Launch:       spec,
-		Suggestions:  suggestions,
+		ID:          stableID(source, spec),
+		DisplayName: displayName,
+		Source:      source,
+		Launch:      spec,
+		Suggestions: suggestions,
 	}
 	if len(suggestions) == 0 {
 		candidate.RequiresConfirmation = true

@@ -7,11 +7,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"os/exec"
+	"path/filepath"
 	"strings"
 
 	"github.com/DylonH78/AppAlias/internal/model"
 	"github.com/DylonH78/AppAlias/internal/service"
-	"github.com/DylonH78/AppAlias/internal/ui"
 	"github.com/spf13/cobra"
 )
 
@@ -230,11 +231,14 @@ func newRootCommand() *cobra.Command {
 		Use:   "gui",
 		Short: "open the AppAlias manager",
 		RunE: func(_ *cobra.Command, _ []string) error {
-			svc, err := newService(false)
+			executable, err := os.Executable()
 			if err != nil {
 				return err
 			}
-			ui.Show(svc)
+			guiExecutable := filepath.Join(filepath.Dir(executable), "appalias-gui.exe")
+			if err := exec.Command(guiExecutable).Start(); err != nil {
+				return fmt.Errorf("start AppAlias manager: %w", err)
+			}
 			return nil
 		},
 	}

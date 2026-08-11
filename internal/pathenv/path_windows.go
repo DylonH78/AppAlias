@@ -124,9 +124,9 @@ func broadcastEnvironmentChange() {
 	}
 	var result uintptr
 	const (
-		hwndBroadcast    = uintptr(0xffff)
-		wmSettingChange  = uintptr(0x001a)
-		smtoAbortIfHung  = uintptr(0x0002)
+		hwndBroadcast   = uintptr(0xffff)
+		wmSettingChange = uintptr(0x001a)
+		smtoAbortIfHung = uintptr(0x0002)
 	)
 	proc.Call(hwndBroadcast, wmSettingChange, 0, uintptr(unsafe.Pointer(name)), smtoAbortIfHung, 5000, uintptr(unsafe.Pointer(&result)))
 }

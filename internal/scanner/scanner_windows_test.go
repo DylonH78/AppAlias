@@ -34,3 +34,19 @@ func TestCandidateKeyIgnoresDisplayNameButRetainsLaunchIdentity(t *testing.T) {
 		t.Fatal("different arguments must not deduplicate")
 	}
 }
+
+func TestSplitCommandLine(t *testing.T) {
+	arguments, err := splitCommandLine(`--profile "work profile" --safe-mode`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []string{"--profile", "work profile", "--safe-mode"}
+	if len(arguments) != len(want) {
+		t.Fatalf("arguments = %#v, want %#v", arguments, want)
+	}
+	for index := range want {
+		if arguments[index] != want[index] {
+			t.Fatalf("arguments = %#v, want %#v", arguments, want)
+		}
+	}
+}

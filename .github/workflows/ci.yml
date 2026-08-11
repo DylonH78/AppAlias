@@ -17,9 +17,13 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: '1.23.x'
-      - uses: egor-tensin/setup-mingw@v2
+      - uses: msys2/setup-msys2@v2
         with:
-          platform: x64
+          msystem: MINGW64
+          install: mingw-w64-x86_64-gcc mingw-w64-x86_64-toolchain
+      - name: Expose MinGW64 to PowerShell builds
+        shell: powershell
+        run: Add-Content $env:GITHUB_PATH 'C:\msys64\mingw64\bin'
       - name: Resolve dependencies
         run: go mod tidy
       - name: Test
